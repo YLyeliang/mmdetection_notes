@@ -365,7 +365,9 @@ def print_map_summary(mean_ap, results, dataset=None):
     header = ['class', 'gts', 'dets', 'recall', 'precision', 'ap']
     for i in range(num_scales):
         table_data = [header]
-        for j in range(num_classes):
+        for j in range(num_classes):        # when eval voc dataset, the num_classes are default to 80, while voc have only 20 classes in list of label_nmae it may cause list index out of range
+            if dataset == 'voc07' and j == 20:
+                break
             row_data = [
                 label_names[j], num_gts[i, j], results[j]['num_dets'],
                 '{:.3f}'.format(recalls[i, j]), '{:.3f}'.format(

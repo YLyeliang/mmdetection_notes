@@ -65,7 +65,7 @@ class CustomDataset(Dataset):
             self.proposals = None
         # filter images with no annotation during training
         if not test_mode:
-            valid_inds = self._filter_imgs()
+            valid_inds = self._filter_imgs()    # filter small size images
             self.img_infos = [self.img_infos[i] for i in valid_inds]
             if self.proposals is not None:
                 self.proposals = [self.proposals[i] for i in valid_inds]
@@ -108,7 +108,7 @@ class CustomDataset(Dataset):
 
         # set group flag for the sampler
         if not self.test_mode:
-            self._set_group_flag()
+            self._set_group_flag()  # aspect ratio greater than 1 will be group 1,other 0.
         # transforms
         self.img_transform = ImageTransform(
             size_divisor=self.size_divisor, **self.img_norm_cfg)

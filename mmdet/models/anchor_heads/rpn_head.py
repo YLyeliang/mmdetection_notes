@@ -67,29 +67,31 @@ class RPNHead(AnchorHead):
             rpn_bbox_pred = bbox_preds[idx]
             assert rpn_cls_score.size()[-2:] == rpn_bbox_pred.size()[-2:]
             anchors = mlvl_anchors[idx]
-            rpn_cls_score = rpn_cls_score.permute(1, 2, 0)
+            rpn_cls_score = rpn_cls_score.permute(1, 2, 0)  # permute:change the order of dimension.CHW to HWC
             if self.use_sigmoid_cls:
                 rpn_cls_score = rpn_cls_score.reshape(-1)
                 scores = rpn_cls_score.sigmoid()
             else:
-                rpn_cls_score = rpn_cls_score.reshape(-1, 2)
+                rpn_cls_score = rpn_cls_score.reshape(-1, 2)    # 2 classes: object/non-object
                 scores = rpn_cls_score.softmax(dim=1)[:, 1]
-            rpn_bbox_pred = rpn_bbox_pred.permute(1, 2, 0).reshape(-1, 4)
+            rpn_bbox_pred = rpn_bbox_pred.permute(1, 2, 0).reshape(-1, 4)   # CHW to HWC ,then reshape to (H*W,4)
+            # get top nms_pre number of bbox_pred,anchors & scores.
             if cfg.nms_pre > 0 and scores.shape[0] > cfg.nms_pre:
-                _, topk_inds = scores.topk(cfg.nms_pre)
-                rpn_bbox_pred = rpn_bbox_pred[topk_inds, :]
-                anchors = anchors[topk_inds, :]
+                _, topk_inds = scores.topk(cfg.nms_pre)     # get the top-k largest values, _ values, topk_inds index
+                rpn_bbox_pred = rpn_bbox_pred[topk_inds, :] # top-k bbox_pred.
+                anchors = anchors[topk_inds, :]     # get anchors corresponding to bbox_pred
                 scores = scores[topk_inds]
-            proposals = delta2bbox(anchors, rpn_bbox_pred, self.target_means,
+            proposals = delta2bbox(anchors, rpn_bbox_pred, self.target_means,   # translate pred to proposals with respect to anchors.
                                    self.target_stds, img_shape)
             if cfg.min_bbox_size > 0:
+                # get bbox which size bigger than cfg.min_bbox_size
                 w = proposals[:, 2] - proposals[:, 0] + 1
                 h = proposals[:, 3] - proposals[:, 1] + 1
                 valid_inds = torch.nonzero((w >= cfg.min_bbox_size) &
                                            (h >= cfg.min_bbox_size)).squeeze()
                 proposals = proposals[valid_inds, :]
                 scores = scores[valid_inds]
-            proposals = torch.cat([proposals, scores.unsqueeze(-1)], dim=-1)
+            proposals = torch.cat([proposals, scores.unsqueeze(-1)], dim=-1)    # same as tf.concat
             proposals, _ = nms(proposals, cfg.nms_thr)
             proposals = proposals[:cfg.nms_post, :]
             mlvl_proposals.append(proposals)

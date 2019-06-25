@@ -43,7 +43,7 @@ def random_scale(img_scales, mode='range'):
     Returns:
         tuple: Sampled image scale.
     """
-    num_scales = len(img_scales)
+    num_scales = len(img_scales)    # number of random size
     if num_scales == 1:  # fixed scale is specified
         img_scale = img_scales[0]
     elif num_scales == 2:  # randomly sample a scale
@@ -77,7 +77,7 @@ def show_ann(coco, img, ann_info):
 def get_dataset(data_cfg):
     if data_cfg['type'] == 'RepeatDataset':
         return RepeatDataset(
-            get_dataset(data_cfg['dataset']), data_cfg['times'])
+            get_dataset(data_cfg['dataset']), data_cfg['times'])        # get repeat dataset
 
     if isinstance(data_cfg['ann_file'], (list, tuple)):
         ann_files = data_cfg['ann_file']
@@ -86,7 +86,7 @@ def get_dataset(data_cfg):
         ann_files = [data_cfg['ann_file']]
         num_dset = 1
 
-    if 'proposal_file' in data_cfg.keys():
+    if 'proposal_file' in data_cfg.keys():      # if have proposal file,then get it
         if isinstance(data_cfg['proposal_file'], (list, tuple)):
             proposal_files = data_cfg['proposal_file']
         else:
@@ -95,7 +95,7 @@ def get_dataset(data_cfg):
         proposal_files = [None] * num_dset
     assert len(proposal_files) == num_dset
 
-    if isinstance(data_cfg['img_prefix'], (list, tuple)):
+    if isinstance(data_cfg['img_prefix'], (list, tuple)):       # setting image prefix
         img_prefixes = data_cfg['img_prefix']
     else:
         img_prefixes = [data_cfg['img_prefix']] * num_dset
@@ -103,11 +103,11 @@ def get_dataset(data_cfg):
 
     dsets = []
     for i in range(num_dset):
-        data_info = copy.deepcopy(data_cfg)
+        data_info = copy.deepcopy(data_cfg)     # deep copy, generate a new object have same content.
         data_info['ann_file'] = ann_files[i]
         data_info['proposal_file'] = proposal_files[i]
         data_info['img_prefix'] = img_prefixes[i]
-        dset = obj_from_dict(data_info, datasets)
+        dset = obj_from_dict(data_info, datasets)       # return a specific Dataset class e.g VOCDataset from__init__.py
         dsets.append(dset)
     if len(dsets) > 1:
         dset = ConcatDataset(dsets)

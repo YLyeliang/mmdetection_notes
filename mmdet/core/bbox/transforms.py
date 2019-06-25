@@ -31,27 +31,36 @@ def bbox2delta(proposals, gt, means=[0, 0, 0, 0], stds=[1, 1, 1, 1]):
     return deltas
 
 
+
 def delta2bbox(rois,
                deltas,
                means=[0, 0, 0, 0],
                stds=[1, 1, 1, 1],
                max_shape=None,
                wh_ratio_clip=16 / 1000):
-    means = deltas.new_tensor(means).repeat(1, deltas.size(1) // 4)
-    stds = deltas.new_tensor(stds).repeat(1, deltas.size(1) // 4)
-    denorm_deltas = deltas * stds + means
-    dx = denorm_deltas[:, 0::4]
+    """
+    :param rois:
+    :param deltas: size(-1,4)
+    :param means:
+    :param stds:
+    :param max_shape:
+    :param wh_ratio_clip:
+    """
+    means = deltas.new_tensor(means).repeat(1, deltas.size(1) // 4)     # size (1,1)
+    stds = deltas.new_tensor(stds).repeat(1, deltas.size(1) // 4)       # size (1,1)
+    denorm_deltas = deltas * stds + means       # (delta-u)/std = norm_delta => denorm_delta = delta*std+mean
+    dx = denorm_deltas[:, 0::4] # dx size (-1,1)
     dy = denorm_deltas[:, 1::4]
     dw = denorm_deltas[:, 2::4]
     dh = denorm_deltas[:, 3::4]
     max_ratio = np.abs(np.log(wh_ratio_clip))
     dw = dw.clamp(min=-max_ratio, max=max_ratio)
     dh = dh.clamp(min=-max_ratio, max=max_ratio)
-    px = ((rois[:, 0] + rois[:, 2]) * 0.5).unsqueeze(1).expand_as(dx)
+    px = ((rois[:, 0] + rois[:, 2]) * 0.5).unsqueeze(1).expand_as(dx) # anchor center x ,same shape as dx
     py = ((rois[:, 1] + rois[:, 3]) * 0.5).unsqueeze(1).expand_as(dy)
     pw = (rois[:, 2] - rois[:, 0] + 1.0).unsqueeze(1).expand_as(dw)
     ph = (rois[:, 3] - rois[:, 1] + 1.0).unsqueeze(1).expand_as(dh)
-    gw = pw * dw.exp()
+    gw = pw * dw.exp()      # ground_w = anchor_w * exp(delta_w)
     gh = ph * dh.exp()
     gx = torch.addcmul(px, 1, pw, dx)  # gx = px + pw * dx
     gy = torch.addcmul(py, 1, ph, dy)  # gy = py + ph * dy

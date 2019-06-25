@@ -42,10 +42,10 @@ class GroupSampler(Sampler):
         self.dataset = dataset
         self.samples_per_gpu = samples_per_gpu
         self.flag = dataset.flag.astype(np.int64)
-        self.group_sizes = np.bincount(self.flag)
+        self.group_sizes = np.bincount(self.flag)   # calculate number of flag 0 and flag 1.
         self.num_samples = 0
         for i, size in enumerate(self.group_sizes):
-            self.num_samples += int(np.ceil(
+            self.num_samples += int(np.ceil(            # num_samples +=  size/sample * sample, means total number of samples with flag 0 & flag 1.
                 size / self.samples_per_gpu)) * self.samples_per_gpu
 
     def __iter__(self):

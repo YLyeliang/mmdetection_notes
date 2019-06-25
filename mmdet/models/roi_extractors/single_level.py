@@ -42,7 +42,7 @@ class SingleRoIExtractor(nn.Module):
 
     def build_roi_layers(self, layer_cfg, featmap_strides):
         cfg = layer_cfg.copy()
-        layer_type = cfg.pop('type')
+        layer_type = cfg.pop('type')        # RoIAlign
         assert hasattr(ops, layer_type)
         layer_cls = getattr(ops, layer_type)
         roi_layers = nn.ModuleList(
@@ -58,14 +58,14 @@ class SingleRoIExtractor(nn.Module):
         - scale >= finest_scale * 4: level 3
 
         Args:
-            rois (Tensor): Input RoIs, shape (k, 5).
+            rois (Tensor): Input RoIs, shape (k, 5). (object,coordinates)
             num_levels (int): Total level number.
 
         Returns:
             Tensor: Level index (0-based) of each RoI, shape (k, )
         """
         scale = torch.sqrt(
-            (rois[:, 3] - rois[:, 1] + 1) * (rois[:, 4] - rois[:, 2] + 1))
+            (rois[:, 3] - rois[:, 1] + 1) * (rois[:, 4] - rois[:, 2] + 1))  # w*h
         target_lvls = torch.floor(torch.log2(scale / self.finest_scale + 1e-6))
         target_lvls = target_lvls.clamp(min=0, max=num_levels - 1).long()
         return target_lvls

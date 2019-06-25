@@ -37,15 +37,15 @@ class ImageTransform(object):
             scale_factor = np.array(
                 [w_scale, h_scale, w_scale, h_scale], dtype=np.float32)
         img_shape = img.shape
-        img = mmcv.imnormalize(img, self.mean, self.std, self.to_rgb)
+        img = mmcv.imnormalize(img, self.mean, self.std, self.to_rgb)   # (x - mean) / std  , brg2rgb
         if flip:
-            img = mmcv.imflip(img)
+            img = mmcv.imflip(img)      # flip images
         if self.size_divisor is not None:
-            img = mmcv.impad_to_multiple(img, self.size_divisor)
+            img = mmcv.impad_to_multiple(img, self.size_divisor)    # padding image to make sure divided by divisor.
             pad_shape = img.shape
         else:
             pad_shape = img_shape
-        img = img.transpose(2, 0, 1)
+        img = img.transpose(2, 0, 1)        # HWC to CHW
         return img, img_shape, pad_shape, scale_factor
 
 

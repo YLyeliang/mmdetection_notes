@@ -44,20 +44,19 @@ def parse_args():
 
 def main():
     args = parse_args()
-
     cfg = Config.fromfile(args.config)
     # set cudnn_benchmark
     if cfg.get('cudnn_benchmark', False):
         torch.backends.cudnn.benchmark = True
     # update configs according to CLI args
     if args.work_dir is not None:
-        cfg.work_dir = args.work_dir
+        cfg.work_dir = args.work_dir    # checkpoint save path
     if args.resume_from is not None:
-        cfg.resume_from = args.resume_from
-    cfg.gpus = args.gpus
+        cfg.resume_from = args.resume_from  # checkpoint resume from path
+    cfg.gpus = args.gpus        # gpus numbers
 
     # init distributed env first, since logger depends on the dist info.
-    if args.launcher == 'none':
+    if args.launcher == 'none':     # if laucher == none , then distributed == False means no distributed training.
         distributed = False
     else:
         distributed = True
@@ -75,7 +74,7 @@ def main():
     model = build_detector(
         cfg.model, train_cfg=cfg.train_cfg, test_cfg=cfg.test_cfg)
 
-    train_dataset = get_dataset(cfg.data.train)
+    train_dataset = get_dataset(cfg.data.train) # get dataset   param: train(a dict containing configs) return a specific dataset class
     if cfg.checkpoint_config is not None:
         # save mmdet version, config file content and class names in
         # checkpoints as meta data
@@ -84,7 +83,7 @@ def main():
             config=cfg.text,
             CLASSES=train_dataset.CLASSES)
     # add an attribute for visualization convenience
-    model.CLASSES = train_dataset.CLASSES
+    model.CLASSES = train_dataset.CLASSES       # a tuple containing class names
     train_detector(
         model,
         train_dataset,

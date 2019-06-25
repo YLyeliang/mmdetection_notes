@@ -45,8 +45,8 @@ def voc_eval(result_file, dataset, iou_thr=0.5):
 
 def main():
     parser = ArgumentParser(description='VOC Evaluation')
-    parser.add_argument('result', help='result file path')
-    parser.add_argument('config', help='config file path')
+    parser.add_argument('--result',default='../results.pkl', help='result file path' )
+    parser.add_argument('--config',default='../configs/pascal_voc/cascade_rcnn_x101_64x4d_fpn_1x_voc0712.py', help='config file path')
     parser.add_argument(
         '--iou-thr',
         type=float,
