@@ -366,7 +366,7 @@ def print_map_summary(mean_ap, results, dataset=None):
     for i in range(num_scales):
         table_data = [header]
         for j in range(num_classes):        # when eval voc dataset, the num_classes are default to 80, while voc have only 20 classes in list of label_nmae it may cause list index out of range
-            if dataset == 'voc07' and j == 20:
+            if dataset == 'voc07' and j == 1:
                 break
             row_data = [
                 label_names[j], num_gts[i, j], results[j]['num_dets'],

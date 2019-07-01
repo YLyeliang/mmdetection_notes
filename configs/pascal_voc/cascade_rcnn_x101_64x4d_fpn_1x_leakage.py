@@ -212,7 +212,7 @@ data = dict(
         with_label=True),
     test=dict(
         type=dataset_type,
-        ann_file=data_root + 'VOC2007/ImageSets/Main/test.txt',
+        ann_file=data_root + 'VOC2007/ImageSets/Main/val.txt',
         img_prefix=data_root + 'VOC2007/',
         img_scale=(1000, 600),
         img_norm_cfg=img_norm_cfg,
@@ -245,6 +245,6 @@ total_epochs = 12
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
 work_dir = './work_dirs/cascade_rcnn_x101_64x4d_fpn_1x_leakage'
-load_from = './work_dirs/cascade_rcnn_x101_64x4d_fpn_1x/epoch_12.pth'
+load_from = None
 resume_from = None
 workflow = [('train', 1)]
