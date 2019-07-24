@@ -43,8 +43,8 @@ def parse_args():
 
 
 def main():
-    args = parse_args()
-    cfg = Config.fromfile(args.config)
+    args = parse_args() # 解析命令行参数
+    cfg = Config.fromfile(args.config)  # 读取配置文件
     # set cudnn_benchmark
     if cfg.get('cudnn_benchmark', False):
         torch.backends.cudnn.benchmark = True

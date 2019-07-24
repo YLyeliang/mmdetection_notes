@@ -1,5 +1,6 @@
 import warnings
 
+import os
 import mmcv
 import numpy as np
 import pycocotools.mask as maskUtils
@@ -10,7 +11,7 @@ from mmdet.core import get_classes
 from mmdet.datasets import to_tensor
 from mmdet.datasets.transforms import ImageTransform
 from mmdet.models import build_detector
-
+import mtcv
 
 def init_detector(config, checkpoint=None, device='cuda:0'):
     """Initialize a detector from config file.
@@ -100,7 +101,7 @@ def _inference_generator(model, imgs, img_transform, device):
 
 
 # TODO: merge this method with the one in BaseDetector
-def show_result(img, result, class_names, score_thr=0.3, out_file=None):
+def show_result(img, result, class_names, score_thr=0.5, out_path=None,out_file=None,txt=None):
     """Visualize the detection results on the image.
 
     Args:
@@ -113,8 +114,8 @@ def show_result(img, result, class_names, score_thr=0.3, out_file=None):
             be written to the out file instead of shown in a window.
     """
     assert isinstance(class_names, (tuple, list))
-    img = mmcv.imread(img)
-    if isinstance(result, tuple):
+    img = mmcv.imread(img)  # read image
+    if isinstance(result, tuple): # whether predict segm mask.
         bbox_result, segm_result = result
     else:
         bbox_result, segm_result = result, None
@@ -133,7 +134,36 @@ def show_result(img, result, class_names, score_thr=0.3, out_file=None):
         for i, bbox in enumerate(bbox_result)
     ]
     labels = np.concatenate(labels)
-    mmcv.imshow_det_bboxes(
+    if txt is not None:
+        scores = bboxes[:, -1]
+        inds = scores > score_thr
+        bboxes = bboxes[inds, :]
+        labels = labels[inds]
+        num_box= len(bboxes)
+        if num_box>0:
+            f=open(txt+'_yes.txt','a')
+            f.write(txt.split('/')[-1]+'/'+out_file+' '+str(num_box))
+            for bbox, label in zip(bboxes, labels):
+                bbox_int = bbox.astype(np.int32)
+                left_top = (bbox_int[0], bbox_int[1])
+                right_bottom = (bbox_int[2], bbox_int[3])
+                score = "{:.02f}".format(bbox[-1])
+                f.write(' '+str(left_top[0])+' '+str(left_top[1])+' '+str(right_bottom[0])+' '+str(right_bottom[1])+' '+score)
+            f.write('\n')
+        else:
+            f=open(txt+'_no.txt','a')
+            f.write(txt.split('/')[-1]+'/'+out_file+'\n')
+
+    out_file = os.path.join(out_path,out_file)
+    # mmcv.imshow_det_bboxes(
+    #     img.copy(),
+    #     bboxes,
+    #     labels,
+    #     class_names=class_names,
+    #     score_thr=score_thr,
+    #     show=out_file is None,
+    #     out_file=out_file)
+    mtcv.imshow_det_bboxes(
         img.copy(),
         bboxes,
         labels,
@@ -141,3 +171,4 @@ def show_result(img, result, class_names, score_thr=0.3, out_file=None):
         score_thr=score_thr,
         show=out_file is None,
         out_file=out_file)
+

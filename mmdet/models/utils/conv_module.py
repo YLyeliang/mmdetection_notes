@@ -24,7 +24,7 @@ def build_conv_layer(cfg, *args, **kwargs):
     Returns:
         layer (nn.Module): created conv layer
     """
-    if cfg is None:
+    if cfg is None:     # default is None,means normal conv.
         cfg_ = dict(type='Conv')
     else:
         assert isinstance(cfg, dict) and 'type' in cfg

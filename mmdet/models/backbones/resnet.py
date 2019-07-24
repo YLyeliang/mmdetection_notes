@@ -288,7 +288,7 @@ def make_res_layer(block,
                    gen_attention=None,
                    gen_attention_blocks=[]):
     downsample = None
-    if stride != 1 or inplanes != planes * block.expansion:     # example:inplane=64,plane=64,down-sample first,
+    if stride != 1 or inplanes != planes * block.expansion:     # example:inplane=64,plane=64, make inplane = plane * expansion,if stride =2,down-sample
         downsample = nn.Sequential(
             build_conv_layer(
                 conv_cfg,

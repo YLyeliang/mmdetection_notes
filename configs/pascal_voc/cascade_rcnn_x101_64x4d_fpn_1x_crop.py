@@ -185,7 +185,7 @@ data = dict(
     workers_per_gpu=2,
     train=dict(
         type='RepeatDataset',  # to avoid reloading datasets frequently
-        times=3,
+        times=15,
         dataset=dict(
             type=dataset_type,
             ann_file=[
@@ -222,7 +222,7 @@ data = dict(
         with_label=False,
         test_mode=True))
 # optimizer
-optimizer = dict(type='SGD', lr=0.0025, momentum=0.9, weight_decay=0.0001)
+optimizer = dict(type='SGD', lr=0.002, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 # learning policy
 lr_config = dict(
@@ -241,11 +241,11 @@ log_config = dict(
     ])
 # yapf:enable
 # runtime settings
-total_epochs = 12
+total_epochs = 24
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = './work_dirs/cascade_rcnn_x101_64x4d_fpn_1x_leakage'
-# './work_dirs/cascade_rcnn_x101_64x4d_fpn_1x/epoch_12.pth'
+work_dir = './work_dirs/cascade_rcnn_x101_64x4d_fpn_1x_crop'
 load_from = None
+# load_from = './work_dirs/cascade_rcnn_x101_64x4d_fpn_1x/epoch_12.pth'
 resume_from = None
 workflow = [('train', 1)]

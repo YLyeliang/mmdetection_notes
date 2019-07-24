@@ -32,16 +32,16 @@ def build_norm_layer(cfg, num_features, postfix=''):
     if layer_type not in norm_cfg:
         raise KeyError('Unrecognized norm type {}'.format(layer_type))
     else:
-        abbr, norm_layer = norm_cfg[layer_type]
+        abbr, norm_layer = norm_cfg[layer_type] # return corresponding norm name and torch norm layer
         if norm_layer is None:
             raise NotImplementedError
 
     assert isinstance(postfix, (int, str))
     name = abbr + str(postfix)
 
-    requires_grad = cfg_.pop('requires_grad', True)
-    cfg_.setdefault('eps', 1e-5)
-    if layer_type != 'GN':
+    requires_grad = cfg_.pop('requires_grad', True) # default it True, requires gradient
+    cfg_.setdefault('eps', 1e-5)        # set epsilon
+    if layer_type != 'GN':  # batch norm
         layer = norm_layer(num_features, **cfg_)
         if layer_type == 'SyncBN':
             layer._specify_ddp_gpu_num(1)
@@ -50,6 +50,6 @@ def build_norm_layer(cfg, num_features, postfix=''):
         layer = norm_layer(num_channels=num_features, **cfg_)
 
     for param in layer.parameters():
-        param.requires_grad = requires_grad
+        param.requires_grad = requires_grad # record operations on this tensor
 
     return name, layer

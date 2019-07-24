@@ -51,20 +51,24 @@ class AnchorHead(nn.Module):
         self.anchor_scales = anchor_scales
         self.anchor_ratios = anchor_ratios
         self.anchor_strides = anchor_strides
-        self.anchor_base_sizes = list(          # base anchor sizes a proportion of feat map with respect to input
+        self.anchor_base_sizes = list(          # base anchor sizes: a proportion of feat map with respect to input
             anchor_strides) if anchor_base_sizes is None else anchor_base_sizes
         self.target_means = target_means
         self.target_stds = target_stds
 
         self.use_sigmoid_cls = loss_cls.get('use_sigmoid', False)
         self.sampling = loss_cls['type'] not in ['FocalLoss', 'GHMC']
+
         if self.use_sigmoid_cls:
-            self.cls_out_channels = num_classes - 1
+            self.cls_out_channels = num_classes - 1 # why minus 1
         else:
             self.cls_out_channels = num_classes
+
+        # build losses
         self.loss_cls = build_loss(loss_cls)
         self.loss_bbox = build_loss(loss_bbox)
 
+        # generate anchors by using AnchorGenerator, anchor_base are anchor_stride e.g 4 8 16 32 64
         self.anchor_generators = []
         for anchor_base in self.anchor_base_sizes:
             self.anchor_generators.append(

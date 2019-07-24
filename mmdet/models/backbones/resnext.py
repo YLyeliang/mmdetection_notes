@@ -8,7 +8,7 @@ from .resnet import ResNet
 from ..registry import BACKBONES
 from ..utils import build_conv_layer, build_norm_layer
 
-
+# 继承自ResNet的Bottleneck
 class Bottleneck(_Bottleneck):
 
     def __init__(self, groups=1, base_width=4, *args, **kwargs):
@@ -18,18 +18,20 @@ class Bottleneck(_Bottleneck):
         """
         super(Bottleneck, self).__init__(*args, **kwargs)
 
-        if groups == 1:
+        if groups == 1:   # if groups ==1 ,it is a normal conv, not resnext
             width = self.planes
         else:
-            width = math.floor(self.planes * (base_width / 64)) * groups
+            width = math.floor(self.planes * (base_width / 64)) * groups    # c_out * (base_width / 64) * groups
 
+        # 建立三个batch normalization layer,分别对应bottleneck中的三个卷积层
         self.norm1_name, norm1 = build_norm_layer(
-            self.norm_cfg, width, postfix=1)
+            self.norm_cfg, width, postfix=1)        # 标准化参数，宽度和后缀   cfg:BN
         self.norm2_name, norm2 = build_norm_layer(
             self.norm_cfg, width, postfix=2)
         self.norm3_name, norm3 = build_norm_layer(
             self.norm_cfg, self.planes * self.expansion, postfix=3)
 
+        # 建立卷积层 一般卷积conv_cfg为None,inplanes输入通道，width宽度，
         self.conv1 = build_conv_layer(
             self.conv_cfg,
             self.inplanes,
@@ -37,9 +39,10 @@ class Bottleneck(_Bottleneck):
             kernel_size=1,
             stride=self.conv1_stride,
             bias=False)
-        self.add_module(self.norm1_name, norm1)
+        self.add_module(self.norm1_name, norm1) # pytorch函数，添加模块
         fallback_on_stride = False
         self.with_modulated_dcn = False
+        # deformable convolution
         if self.with_dcn:
             fallback_on_stride = self.dcn.get('fallback_on_stride', False)
             self.with_modulated_dcn = self.dcn.get('modulated', False)
@@ -106,8 +109,9 @@ def make_res_layer(block,
                    dcn=None,
                    gcb=None):
     downsample = None
-    if stride != 1 or inplanes != planes * block.expansion:
-        downsample = nn.Sequential(
+    # conv before Bottleneck
+    if stride != 1 or inplanes != planes * block.expansion: # if stride !=1 ,down-sample or make sure cout & cin are equal.
+        downsample = nn.Sequential(                         # if Cin !=Cout, operate a conv to equal Cout & Cin.
             build_conv_layer(
                 conv_cfg,
                 inplanes,
@@ -119,6 +123,7 @@ def make_res_layer(block,
         )
 
     layers = []
+    # during iteration in blocks,first block should downsample or equal Cin & Cout.
     layers.append(
         block(
             inplanes=inplanes,
@@ -134,7 +139,7 @@ def make_res_layer(block,
             norm_cfg=norm_cfg,
             dcn=dcn,
             gcb=gcb))
-    inplanes = planes * block.expansion
+    inplanes = planes * block.expansion # 4 * planes
     for i in range(1, blocks):
         layers.append(
             block(
@@ -195,25 +200,26 @@ class ResNeXt(ResNet):
         self.inplanes = 64
         self.res_layers = []
         for i, num_blocks in enumerate(self.stage_blocks):
-            stride = self.strides[i]
-            dilation = self.dilations[i]
+            stride = self.strides[i]        # strides default: (1,2,2,2)
+            dilation = self.dilations[i]    # dilation default:(1,1,1,1)    means norm conv. if greater than 1 atrous.
             dcn = self.dcn if self.stage_with_dcn[i] else None
             gcb = self.gcb if self.stage_with_gcb[i] else None
-            planes = 64 * 2**i
+            planes = 64 * 2**i  # 64 * 2^i    : 64 128 256 512
+            # first Cin 64, planes 64, Cout 64*4=256,
             res_layer = make_res_layer(
-                self.block,
+                self.block, # Bottleneck
                 self.inplanes,
                 planes,
-                num_blocks,
+                num_blocks,     # number of bottleneck.
                 stride=stride,
                 dilation=dilation,
-                groups=self.groups,
-                base_width=self.base_width,
-                style=self.style,
+                groups=self.groups, # 32 or 64  the group of resnext
+                base_width=self.base_width, # base width , normally 4.
+                style=self.style,       # pytorch
                 with_cp=self.with_cp,
-                conv_cfg=self.conv_cfg,
-                norm_cfg=self.norm_cfg,
-                dcn=dcn,
+                conv_cfg=self.conv_cfg, # default None,means norm conv
+                norm_cfg=self.norm_cfg, # default Batch norm.
+                dcn=dcn,    # deformable convolution.
                 gcb=gcb)
             self.inplanes = planes * self.block.expansion
             layer_name = 'layer{}'.format(i + 1)

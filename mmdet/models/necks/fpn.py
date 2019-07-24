@@ -25,8 +25,8 @@ class FPN(nn.Module):
         assert isinstance(in_channels, list)
         self.in_channels = in_channels
         self.out_channels = out_channels
-        self.num_ins = len(in_channels)     # number of in_channels
-        self.num_outs = num_outs            # number of outputs
+        self.num_ins = len(in_channels)     # number of input feature maps
+        self.num_outs = num_outs            # number of outputs e.g 5
         self.activation = activation
         self.relu_before_extra_convs = relu_before_extra_convs
 
