@@ -2,19 +2,13 @@
 model = dict(
     type='CascadeRCNN',
     num_stages=3,
-    pretrained='open-mmlab://resnext101_64x4d',
+    pretrained='efficientnet-b4',
     backbone=dict(
-        type='ResNeXt',
-        depth=101,
-        groups=64,
-        base_width=4,
-        num_stages=4,
-        out_indices=(0, 1, 2, 3),
-        frozen_stages=1,
-        style='pytorch'),
+        type='EfficientNet',
+        model_name='efficientnet-b4'),
     neck=dict(
         type='FPN',
-        in_channels=[256, 512, 1024, 2048],
+        in_channels=[32, 56,160, 272],
         out_channels=256,
         num_outs=5),
     rpn_head=dict(
@@ -176,20 +170,23 @@ test_cfg = dict(
     keep_all_stages=False)
 
 # dataset settings
-dataset_type = 'LeakageDataset'
-data_root = 'data/20190719/'
+# dataset_type = 'LeakageDataset'
+# data_root = 'data/together/'
+dataset_type = 'VOCDataset'
+data_root = '../data/VOCdevkit/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 data = dict(
-    imgs_per_gpu=4,
+    imgs_per_gpu=2,
     workers_per_gpu=2,
     train=dict(
         type='RepeatDataset',  # to avoid reloading datasets frequently
-        times=5,
+        times=2,
         dataset=dict(
             type=dataset_type,
             ann_file=[
-                data_root + 'VOC2007/ImageSets/Main/trainval.txt'
+                data_root + 'VOC2007/ImageSets/Main/trainval.txt',
+                # data_root + 'VOC2012/ImageSets/Main/trainval.txt'
             ],
             img_prefix=[data_root + 'VOC2007/'],
             img_scale=(1000, 600),
@@ -222,7 +219,7 @@ data = dict(
         with_label=False,
         test_mode=True))
 # optimizer
-optimizer = dict(type='SGD', lr=0.002, momentum=0.9, weight_decay=0.0001)
+optimizer = dict(type='SGD', lr=0.0025, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 # learning policy
 lr_config = dict(
@@ -244,8 +241,9 @@ log_config = dict(
 total_epochs = 12
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = './work_dirs/cascade_rcnn_x101_64x4d_fpn_1x_crop_based_20190719'
+work_dir = './work_dirs/cascade_rcnn_efficient_b4_fpn_1x_leakage'
+# './work_dirs/cascade_rcnn_x101_64x4d_fpn_1x/epoch_12.pth'
 # load_from = None
-load_from = '/data2/yeliang/py_project/mmdetection/work_dirs/cascade_rcnn_x101_64x4d_fpn_1x_crop/epoch_24.pth'
+load_from = './work_dirs/cascade_rcnn_efficient_b4_fpn_1x_leakage/voc.pth'
 resume_from = None
 workflow = [('train', 1)]

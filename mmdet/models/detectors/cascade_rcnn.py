@@ -90,7 +90,7 @@ class CascadeRCNN(BaseDetector, RPNTestMixin):
         return hasattr(self, 'rpn_head') and self.rpn_head is not None
 
     def init_weights(self, pretrained=None):
-        super(CascadeRCNN, self).init_weights(pretrained)
+        super(CascadeRCNN, self).init_weights(pretrained)   # only print info
         self.backbone.init_weights(pretrained=pretrained)
         if self.with_neck:
             if isinstance(self.neck, nn.Sequential):

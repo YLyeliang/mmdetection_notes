@@ -26,7 +26,8 @@ def imshow_det_bboxes(img,
                       show=True,
                       win_name='',
                       wait_time=0,
-                      out_file=None):
+                      out_file=None,
+                      ret=False):
     """Draw bboxes and class labels (with scores) on an image.
 
     Args:
@@ -68,8 +69,14 @@ def imshow_det_bboxes(img,
 
         label_text = class_names[
             label] if class_names is not None else 'cls {}'.format(label)
-        if 'person' not in label_text:
+        if 'person' not in label_text and 'car' not in label_text:
             continue
+        if 'person' in label_text:
+            bbox_color=color_val('green')
+            text_color=color_val('green')
+        else:
+            bbox_color=color_val('yellow')
+            text_color=color_val('yellow')
         if len(bbox) > 4:
             label_text += '|{:.02f}'.format(bbox[-1])
         cv2.putText(img, label_text, (bbox_int[0], bbox_int[1] - 2),
@@ -81,3 +88,5 @@ def imshow_det_bboxes(img,
         imshow(img, win_name, wait_time)
     if out_file is not None:
         imwrite(img, out_file)
+    if ret:
+        return img

@@ -101,7 +101,7 @@ def _inference_generator(model, imgs, img_transform, device):
 
 
 # TODO: merge this method with the one in BaseDetector
-def show_result(img, result, class_names, score_thr=0.5, out_path=None,out_file=None,txt=None):
+def show_result(img, result, class_names, score_thr=0.5, out_path=None,out_file=None,txt=None,ret=False):
     """Visualize the detection results on the image.
 
     Args:
@@ -153,8 +153,8 @@ def show_result(img, result, class_names, score_thr=0.5, out_path=None,out_file=
         else:
             f=open(txt+'_no.txt','a')
             f.write(txt.split('/')[-1]+'/'+out_file+'\n')
-
-    out_file = os.path.join(out_path,out_file)
+    if out_file is not None and out_path is not None:
+        out_file = os.path.join(out_path,out_file)
     # mmcv.imshow_det_bboxes(
     #     img.copy(),
     #     bboxes,
@@ -163,12 +163,24 @@ def show_result(img, result, class_names, score_thr=0.5, out_path=None,out_file=
     #     score_thr=score_thr,
     #     show=out_file is None,
     #     out_file=out_file)
-    mtcv.imshow_det_bboxes(
-        img.copy(),
-        bboxes,
-        labels,
-        class_names=class_names,
-        score_thr=score_thr,
-        show=out_file is None,
-        out_file=out_file)
+    if ret:
+        res=mtcv.imshow_det_bboxes(
+            img.copy(),
+            bboxes,
+            labels,
+            class_names=class_names,
+            score_thr=score_thr,
+            show=False,
+            out_file=None,
+            ret=True)
+        return res
+    else:
+        mmcv.imshow_det_bboxes(
+            img.copy(),
+            bboxes,
+            labels,
+            class_names=class_names,
+            score_thr=score_thr,
+            show=out_file is None,
+            out_file=out_file)
 
